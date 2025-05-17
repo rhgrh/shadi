@@ -13,7 +13,7 @@
         }
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #f8feff;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -33,19 +33,17 @@
             display: block;
             width: 80%;
             max-width: 300px;
-            padding: 15px;
+            padding: 17px;
             margin: 10px auto;
-            background-color: #007bff;
+            background-color: #031e57;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             transition: background-color 0.3s;
         }
-        .button:hover {
-            background-color: #0056b3;
-        }
+        
         .transformer-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -61,23 +59,23 @@
         }
         .home-button {
             position: fixed;
-            top: 20px;
-            left: 20px;
-            background-color: #28a745;
+            top: 12px;
+            left: 12px;
+            background-color: #f8feff;
             padding: 12px;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            z-index: 1000;
+            z-index: 100;
             transition: background-color 0.3s, transform 0.2s;
         }
         .home-button:hover {
-            background-color: #218838;
+            background-color: #ffffff;
             transform: scale(1.1);
         }
         .home-button svg {
             width: 24px;
             height: 24px;
-            fill: white;
+            fill: #031e57;
         }
         .section {
             display: none;
@@ -108,15 +106,15 @@
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 9px;
             text-align: center;
-            font-size: 0.9rem;
+            font-size: 22px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
         th {
-            background-color: #007bff;
+            background-color: #031e57;
             color: white;
             position: sticky;
             top: 0;
@@ -127,14 +125,14 @@
             text-decoration: underline;
         }
         td.blink {
-            background-color: rgba(255, 99, 71, 0.3);
+            background-color: rgb(255, 38, 0);
             transition: background-color 0.5s;
         }
         td.blink-active {
-            background-color: rgba(255, 99, 71, 0.5);
+            background-color: rgba(238, 255, 0, 0.5);
         }
         td.fixed {
-            background-color: rgba(144, 238, 144, 0.3);
+            background-color: rgba(84, 236, 13, 0.822);
         }
         .table-body {
             overflow-y: auto;
@@ -165,7 +163,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgb(0, 0, 0);
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -174,7 +172,7 @@
             display: flex;
         }
         .modal-content {
-            background-color: white;
+            background-color: rgb(255, 255, 255);
             padding: 20px;
             border-radius: 5px;
             width: 90%;
@@ -344,7 +342,7 @@
             <h3>مرحبًا، <span id="currentUser"></span></h3>
             <button class="button" onclick="showSection('maintenance', 'home')">صيانة</button>
             <button class="button" onclick="showSection('inspection', 'home')">فحص</button>
-            <button class="button" onclick="showUpdatePasswordModal()">تحديث كلمة مرور المدير</button>
+           
             <button class="button" onclick="logout()">تسجيل الخروج</button>
         </div>
 
@@ -425,19 +423,19 @@
         <!-- قسم Stations -->
         <div id="stations" class="section">
             <button class="button" onclick="showSection('22kv', 'stations')">22kv</button>
-            <button class="button" onclick="showTable('6.3 kv', 'stations')">6.3 kv</button>
+            <button class="button" onclick="showTable('6.3kv', 'stations')">6.3kv</button>
             <button class="button" onclick="showTable('MCC', 'stations')">MCC</button>
             <button class="button" onclick="showTable('CCR', 'stations')">CCR</button>
-            <button class="button" onclick="showTable('cbm1', 'stations')">cbm1</button>
-            <button class="button" onclick="showTable('cbm2', 'stations')">cbm2</button>
-            <button class="button" onclick="showTable('cbm3', 'stations')">cbm3</button>
-            <button class="button" onclick="showTable('cbm5', 'stations')">cbm5</button>
-            <button class="button" onclick="showTable('mdb one', 'stations')">mdb one</button>
-            <button class="button" onclick="showTable('mdb2', 'stations')">mdb2</button>
-            <button class="button" onclick="showTable('mdb3', 'stations')">mdb3</button>
-            <button class="button" onclick="showTable('mdb 4', 'stations')">mdb 4</button>
-            <button class="button" onclick="showTable('mdb 5', 'stations')">mdb 5</button>
-            <button class="button" onclick="showTable('Workstation', 'stations')">Workstation</button>
+            <button class="button" onclick="showTable('CBM1', 'stations')">CBM1</button>
+            <button class="button" onclick="showTable('CBM2', 'stations')">CBM2</button>
+            <button class="button" onclick="showTable('CBM3', 'stations')">CBM4</button>
+            <button class="button" onclick="showTable('CBM5', 'stations')">CBM5</button>
+            <button class="button" onclick="showTable('MDB1', 'stations')">MDB1</button>
+            <button class="button" onclick="showTable('MDB2', 'stations')">MDB2</button>
+            <button class="button" onclick="showTable('MDB3', 'stations')">MDB3</button>
+            <button class="button" onclick="showTable('MDB4', 'stations')">MDB4</button>
+            <button class="button" onclick="showTable('MDB5', 'stations')">MDB5</button>
+            <button class="button" onclick="showTable('الورشة', 'stations')">Workstation</button>
             <button class="button" onclick="showSection('other')">رجوع</button>
         </div>
 
@@ -487,7 +485,7 @@
             <div id="loginError" class="alert"></div>
             <button class="button" onclick="login()">تسجيل الدخول</button>
             <button class="button" onclick="showRegisterModal()">إنشاء حساب</button>
-            <button class="button" onclick="showDeleteTechnicianModal()">حذف فني</button>
+            
         </div>
     </div>
 
@@ -511,6 +509,8 @@
             <input type="password" id="regManagerPassword" placeholder="كلمة مرور المدير">
             <div id="registerError" class="alert"></div>
             <button class="button" onclick="register()">تسجيل</button>
+             <button class="button" onclick="showUpdatePasswordModal()">تحديث كلمة مرور المدير</button>
+<button class="button" onclick="showDeleteTechnicianModal()">حذف فني</button>
             <button class="button" onclick="showLoginModal()">رجوع</button>
         </div>
     </div>
@@ -525,7 +525,7 @@
             <input type="password" id="deleteTechnicianPassword" placeholder="كلمة مرور المدير">
             <div id="deleteTechnicianError" class="alert"></div>
             <button class="button" onclick="deleteTechnician()">حذف</button>
-            <button class="button" onclick="closeDeleteTechnicianModal()">إلغاء</button>
+             <button class="button" onclick="showLoginModal()">رجوع</button>
         </div>
     </div>
 
@@ -641,9 +641,9 @@
 
         // حدود القيم المقبولة
         const TEMP_MIN = 0;
-        const TEMP_MAX = 100;
+        const TEMP_MAX = 150;
         const AMP_MIN = 0;
-        const AMP_MAX = 500;
+        const AMP_MAX = 1000;
         const KVARH_MIN = 0;
         const KWH_MIN = 0;
         const PF_MIN = 0;
@@ -836,7 +836,7 @@
                 document.querySelectorAll('.companion-checkbox input').forEach(checkbox => {
                     checkbox.addEventListener('change', function() {
                         const checkmark = this.parentElement.querySelector('.checkmark');
-                        checkmark.textContent = this.checked ? '✅' : '';
+                        checkmark.textContent = this.checked ?  '    ___جاي معاكو ' : ' ___رجعت في كلامي' ;
                     });
                 });
             } catch (e) {
@@ -983,7 +983,7 @@
                         <th style="width: 15%;">النظافة</th>
                         <th style="width: 20%;">الوقت</th>
                         <th style="width: 15%;">الملاحظات</th>
-                        <th style="width: 15%;">اسم الزيت</th>
+                        <th style="width: 15%;">نسبه الزيت</th>
                         <th style="width: 20%;">المسجل</th>
                     `;
                 } else if (isStationNoAmp) {
@@ -1035,7 +1035,7 @@
                     document.querySelectorAll('td.blink').forEach(cell => {
                         cell.classList.toggle('blink-active');
                     });
-                }, 2000);
+                }, 290);
             } catch (e) {
                 console.error('خطأ في startBlinking:', e);
             }
