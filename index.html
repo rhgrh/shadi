@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الصيانة</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .button {
+            display: block;
+            width: 80%;
+            max-width: 300px;
+            padding: 15px;
+            margin: 10px auto;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .transformer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 90%;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        .transformer-grid .button {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+        }
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #28a745;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .home-button:hover {
+            background-color: #218838;
+            transform: scale(1.1);
+        }
+        .home-button svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+        .section {
+            display: none;
+            width: 100%;
+            text-align: center;
+        }
+        .section.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .table-container {
+            width: 90%;
+            max-width: 500px;
+            margin: 20px auto;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            table-layout: fixed;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        td.clickable {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        td.blink {
+            background-color: rgba(255, 99, 71, 0.3);
+            transition: background-color 0.5s;
+        }
+        td.blink-active {
+            background-color: rgba(255, 99, 71, 0.5);
+        }
+        td.fixed {
+            background-color: rgba(144, 238, 144, 0.3);
+        }
+        .table-body {
+            overflow-y: auto;
+            max-height: 300px;
+        }
+        .table-buttons {
+            position: sticky;
+            bottom: 0;
+            background-color: #f4f4f4;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            z-index: 10;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .modal-content.note-modal {
+            max-width: 500px;
+        }
+        .modal-content.note-modal p {
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            text-align: right;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .alert {
+            color: red;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+        #chartModal .modal-content {
+            width: 90%;
+            max-width: 600px;
+        }
+        canvas {
+            max-width: 100%;
+            margin: 10px auto;
+        }
+        #companionsContainer {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .companion-checkbox {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            font-size: 1rem;
+        }
+        .companion-checkbox input {
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+        }
+        .companion-checkbox span {
+            margin-left: 5px;
+        }
+        .table-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .table-title span.icon {
+            font-size: 1.5rem;
+        }
+        @media (max-width: 600px) {
+            .button {
+                width: 90%;
+                font-size: 1rem;
+                padding: 12px;
+            }
+            .transformer-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            th, td {
+                font-size: 0.8rem;
+                padding: 6px;
+            }
+            .modal-content {
+                width: 95%;
+                padding: 15px;
+            }
+            .home-button {
+                top: 10px;
+                left: 10px;
+                padding: 10px;
+            }
+            .home-button svg {
+                width: 20px;
+                height: 20px;
+            }
+            .table-title {
+                font-size: 0.9rem;
+            }
+        }
+        @media print {
+            body, .print-container {
+                margin: 0;
+                padding: 0;
+                background: white;
+                width: 100%;
+                height: auto;
+            }
+            .table-container {
+                width: 100%;
+                max-width: none;
+                margin: 0;
+                height: auto;
+                overflow: visible;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+                page-break-inside: auto;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: center;
+                font-size: 12pt;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            th {
+                background-color: #007bff;
+                color: white;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            h2 {
+                text-align: center;
+                font-size: 16pt;
+                margin-bottom: 20px;
+            }
+            .table-buttons, .home-button, .button, .transformer-grid, .modal {
+                display: none;
+            }
+            .table-body {
+                max-height: none;
+                overflow: visible;
+            }
+            .table-title span.icon {
+                display: none;
+            }
+            td.blink, td.fixed {
+                background-color: transparent;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- زر العودة إلى الصفحة الرئيسية -->
+        <button class="home-button" onclick="showSection('home')" title="العودة إلى الصفحة الرئيسية">
+            <svg viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+        </button>
+
+        <!-- الصفحة الرئيسية -->
+        <div id="home" class="section">
+            <h3>مرحبًا، <span id="currentUser"></span></h3>
+            <button class="button" onclick="showSection('maintenance', 'home')">صيانة</button>
+            <button class="button" onclick="showSection('inspection', 'home')">فحص</button>
+            <button class="button" onclick="showUpdatePasswordModal()">تحديث كلمة مرور المدير</button>
+            <button class="button" onclick="logout()">تسجيل الخروج</button>
+        </div>
+
+        <!-- قسم الصيانة -->
+        <div id="maintenance" class="section">
+            <button class="button" onclick="showSection('lines', 'maintenance')">Lines</button>
+            <button class="button" onclick="showSection('packing', 'maintenance')">Packing</button>
+            <button class="button" onclick="showSection('other', 'maintenance')">Other</button>
+            <button class="button" onclick="showSection('home')">رجوع</button>
+        </div>
+
+        <!-- قسم الفحص -->
+        <div id="inspection" class="section">
+            <button class="button" onclick="showSection('lines', 'inspection')">Lines</button>
+            <button class="button" onclick="showSection('packing', 'inspection')">Packing</button>
+            <button class="button" onclick="showSection('other', 'inspection')">Other</button>
+            <button class="button" onclick="showSection('home')">رجوع</button>
+        </div>
+
+        <!-- قسم Lines -->
+        <div id="lines" class="section">
+            <button class="button" onclick="showSection('normal_lines', 'lines')">Normal Lines</button>
+            <button class="button" onclick="showSection('coating_lines', 'lines')">Coating Lines</button>
+            <button class="button" onclick="showSection('normal_soft', 'lines')">Normal Soft</button>
+            <button class="button" id="linesBackButton">رجوع</button>
+        </div>
+
+        <!-- قسم Packing -->
+        <div id="packing" class="section">
+            <button class="button" onclick="showSection('normal_lines', 'packing')">Normal Lines</button>
+            <button class="button" onclick="showSection('coating_lines', 'packing')">Coating Lines</button>
+            <button class="button" onclick="showSection('normal_soft', 'packing')">Normal Soft</button>
+            <button class="button" id="packingBackButton">رجوع</button>
+        </div>
+
+        <!-- قسم Normal Lines -->
+        <div id="normal_lines" class="section">
+            <button class="button" onclick="showTable('CBM 1', 'normal_lines')">CBM 1</button>
+            <button class="button" onclick="showTable('CBM 2', 'normal_lines')">CBM 2</button>
+            <button class="button" onclick="showTable('CBM 3', 'normal_lines')">CBM 3</button>
+            <button class="button" onclick="showTable('CBM 4', 'normal_lines')">CBM 4</button>
+            <button class="button" onclick="showTable('CBM 5', 'normal_lines')">CBM 5</button>
+            <button class="button" onclick="showTable('CBM 6', 'normal_lines')">CBM 6</button>
+            <button class="button" onclick="showSection('lines')">رجوع</button>
+        </div>
+
+        <!-- قسم Coating Lines -->
+        <div id="coating_lines" class="section">
+            <button class="button" onclick="showTable('400', 'coating_lines')">400</button>
+            <button class="button" onclick="showTable('500', 'coating_lines')">500</button>
+            <button class="button" onclick="showTable('600', 'coating_lines')">600</button>
+            <button class="button" onclick="showTable('700', 'coating_lines')">700</button>
+            <button class="button" onclick="showTable('800', 'coating_lines')">800</button>
+            <button class="button" onclick="showTable('900', 'coating_lines')">900</button>
+            <button class="button" onclick="showSection('lines')">رجوع</button>
+        </div>
+
+        <!-- قسم Normal Soft -->
+        <div id="normal_soft" class="section">
+            <button class="button" onclick="showTable('ATR', 'normal_soft')">ATR</button>
+            <button class="button" onclick="showTable('ANR', 'normal_soft')">ANR</button>
+            <button class="button" onclick="showTable('ACM', 'normal_soft')">ACM</button>
+            <button class="button" onclick="showTable('TTC', 'normal_soft')">TTC</button>
+            <button class="button" onclick="showTable('210', 'normal_soft')">210</button>
+            <button class="button" onclick="showTable('220', 'normal_soft')">220</button>
+            <button class="button" onclick="showSection('lines')">رجوع</button>
+        </div>
+
+        <!-- قسم Other -->
+        <div id="other" class="section">
+            <button class="button" onclick="showSection('stations', 'other')">Stations</button>
+            <button class="button" onclick="showSection('transformers', 'other')">Transformers</button>
+            <button class="button" onclick="showTable('Pumps', 'other')">Pumps</button>
+            <button class="button" onclick="showTable('Compressors', 'other')">Compressors</button>
+            <button class="button" id="otherBackButton">رجوع</button>
+        </div>
+
+        <!-- قسم Stations -->
+        <div id="stations" class="section">
+            <button class="button" onclick="showSection('22kv', 'stations')">22kv</button>
+            <button class="button" onclick="showTable('6.3 kv', 'stations')">6.3 kv</button>
+            <button class="button" onclick="showTable('MCC', 'stations')">MCC</button>
+            <button class="button" onclick="showTable('CCR', 'stations')">CCR</button>
+            <button class="button" onclick="showTable('cbm1', 'stations')">cbm1</button>
+            <button class="button" onclick="showTable('cbm2', 'stations')">cbm2</button>
+            <button class="button" onclick="showTable('cbm3', 'stations')">cbm3</button>
+            <button class="button" onclick="showTable('cbm5', 'stations')">cbm5</button>
+            <button class="button" onclick="showTable('mdb one', 'stations')">mdb one</button>
+            <button class="button" onclick="showTable('mdb2', 'stations')">mdb2</button>
+            <button class="button" onclick="showTable('mdb3', 'stations')">mdb3</button>
+            <button class="button" onclick="showTable('mdb 4', 'stations')">mdb 4</button>
+            <button class="button" onclick="showTable('mdb 5', 'stations')">mdb 5</button>
+            <button class="button" onclick="showTable('Workstation', 'stations')">Workstation</button>
+            <button class="button" onclick="showSection('other')">رجوع</button>
+        </div>
+
+        <!-- قسم 22kv -->
+        <div id="22kv" class="section">
+            <button class="button" onclick="showTable('ASCOM 1', '22kv')">ASCOM 1</button>
+            <button class="button" onclick="showTable('ASCOM 2', '22kv')">ASCOM 2</button>
+            <button class="button" onclick="showSection('stations')">رجوع</button>
+        </div>
+
+        <!-- قسم Transformers -->
+        <div id="transformers" class="section">
+            <div class="transformer-grid">
+                <button class="button" onclick="showTable('TR1', 'transformers')">TR1</button>
+                <button class="button" onclick="showTable('TR2', 'transformers')">TR2</button>
+                <button class="button" onclick="showTable('TR3', 'transformers')">TR3</button>
+                <button class="button" onclick="showTable('TR4', 'transformers')">TR4</button>
+                <button class="button" onclick="showTable('TR5', 'transformers')">TR5</button>
+                <button class="button" onclick="showTable('TR6', 'transformers')">TR6</button>
+                <button class="button" onclick="showTable('TR7', 'transformers')">TR7</button>
+                <button class="button" onclick="showTable('TR8', 'transformers')">TR8</button>
+                <button class="button" onclick="showTable('TR9', 'transformers')">TR9</button>
+                <button class="button" onclick="showTable('TR10', 'transformers')">TR10</button>
+                <button class="button" onclick="showTable('TR11', 'transformers')">TR11</button>
+                <button class="button" onclick="showTable('TR12', 'transformers')">TR12</button>
+                <button class="button" onclick="showTable('TR13', 'transformers')">TR13</button>
+                <button class="button" onclick="showTable('TR14', 'transformers')">TR14</button>
+                <button class="button" onclick="showTable('TR15', 'transformers')">TR15</button>
+                <button class="button" onclick="showTable('TR16', 'transformers')">TR16</button>
+            </div>
+            <button class="button" onclick="showSection('other')">رجوع</button>
+        </div>
+
+        <!-- الجدول -->
+        <div id="tableSection" class="section">
+            <h2 class="table-title"><span class="icon"></span><span id="tableTitle"></span></h2>
+            <div class="table-container" id="tableContainer"></div>
+        </div>
+    </div>
+
+    <!-- نافذة تسجيل الدخول -->
+    <div id="loginModal" class="modal active">
+        <div class="modal-content">
+            <h2>تسجيل الدخول</h2>
+            <input type="text" id="loginUsername" placeholder="اسم المستخدم">
+            <input type="password" id="loginPassword" placeholder="كلمة المرور">
+            <div id="loginError" class="alert"></div>
+            <button class="button" onclick="login()">تسجيل الدخول</button>
+            <button class="button" onclick="showRegisterModal()">إنشاء حساب</button>
+            <button class="button" onclick="showDeleteTechnicianModal()">حذف فني</button>
+        </div>
+    </div>
+
+    <!-- نافذة اختيار المرافقين -->
+    <div id="companionsModal" class="modal">
+        <div class="modal-content">
+            <h2>إدخال المرافقين</h2>
+            <div id="companionsContainer"></div>
+            <div id="companionsError" class="alert"></div>
+            <button class="button" onclick="saveCompanions()">حفظ</button>
+            <button class="button" onclick="skipCompanions()">تخطي</button>
+        </div>
+    </div>
+
+    <!-- نافذة التسجيل -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <h2>إنشاء حساب</h2>
+            <input type="text" id="regUsername" placeholder="اسم المستخدم">
+            <input type="password" id="regPassword" placeholder="كلمة المرور">
+            <input type="password" id="regManagerPassword" placeholder="كلمة مرور المدير">
+            <div id="registerError" class="alert"></div>
+            <button class="button" onclick="register()">تسجيل</button>
+            <button class="button" onclick="showLoginModal()">رجوع</button>
+        </div>
+    </div>
+
+    <!-- نافذة حذف فني -->
+    <div id="deleteTechnicianModal" class="modal">
+        <div class="modal-content">
+            <h2>حذف فني</h2>
+            <select id="technicianSelect">
+                <option value="">اختر الفني</option>
+            </select>
+            <input type="password" id="deleteTechnicianPassword" placeholder="كلمة مرور المدير">
+            <div id="deleteTechnicianError" class="alert"></div>
+            <button class="button" onclick="deleteTechnician()">حذف</button>
+            <button class="button" onclick="closeDeleteTechnicianModal()">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- نافذة تحديث كلمة مرور المدير -->
+    <div id="updatePasswordModal" class="modal">
+        <div class="modal-content">
+            <h2>تحديث كلمة مرور المدير</h2>
+            <input type="password" id="currentManagerPassword" placeholder="كلمة المرور الحالية">
+            <input type="password" id="newManagerPassword" placeholder="كلمة المرور الجديدة">
+            <div id="updatePasswordError" class="alert"></div>
+            <button class="button" onclick="updateManagerPassword()">تحديث</button>
+            <button class="button" onclick="closeUpdatePasswordModal()">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- نافذة إدخال البيانات -->
+    <div id="inputModal" class="modal">
+        <div class="modal-content">
+            <h3>إدخال البيانات</h3>
+            <div id="inputFields"></div>
+            <div id="inputError" class="alert"></div>
+            <button class="button" onclick="saveRow()">حفظ</button>
+            <button class="button" onclick="closeInputModal()">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- نافذة الرسم البياني -->
+    <div id="chartModal" class="modal">
+        <div class="modal-content">
+            <h3>مقارنة القياسات</h3>
+            <select id="chartType" onchange="updateChart()">
+                <option value="temp">الحرارة</option>
+                <option value="amp">الأمبير</option>
+                <option value="kvarh">Kvar/h</option>
+                <option value="kwh">Kw/h</option>
+                <option value="pf">P.F</option>
+            </select>
+            <canvas id="chartCanvas"></canvas>
+            <button class="button" onclick="printTable()">طباعة الجدول</button>
+            <button class="button" onclick="closeChartModal()">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- نافذة عرض الملاحظات -->
+    <div id="noteModal" class="modal">
+        <div class="modal-content note-modal">
+            <h3>الملاحظات الكاملة</h3>
+            <p id="fullNote"></p>
+            <button class="button" onclick="closeNoteModal()">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- نافذة عرض المرافقين -->
+    <div id="companionsViewModal" class="modal">
+        <div class="modal-content">
+            <h3>المرافقون</h3>
+            <p id="companionsList"></p>
+            <button class="button" onclick="closeCompanionsViewModal()">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- نافذة حذف الصف -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h3>حذف السجل</h3>
+            <p id="deleteTimestamp"></p>
+            <input type="password" id="managerPassword" placeholder="كلمة مرور المدير">
+            <div id="deleteError" class="alert"></div>
+            <button class="button" onclick="confirmDelete()">حذف</button>
+            <button class="button" onclick="closeDeleteModal()">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- نافذة تحديث الحالة -->
+    <div id="statusModal" class="modal">
+        <div class="modal-content">
+            <h3>تحديث حالة السجل</h3>
+            <select id="statusInput">
+                <option value="not_fixed">غير منتهي</option>
+                <option value="fixed">تم الإصلاح</option>
+            </select>
+            <input type="password" id="fixerPassword" placeholder="كلمة مرور المصلح">
+            <div id="statusError" class="alert"></div>
+            <button class="button" onclick="saveStatus()">حفظ</button>
+            <button class="button" onclick="closeStatusModal()">إلغاء</button>
+        </div>
+    </div>
+
+    <script>
+        let currentRowIndex = null;
+        let previousSection = null;
+        let currentUser = null;
+        let currentTable = null;
+        let currentChart = null;
+        let records = {};
+        let currentCompanions = [];
+        let rowToDelete = null;
+        let statusRowIndex = null;
+        let blinkInterval = null;
+
+        // كلمة مرور المدير (محملة من localStorage أو القيمة الافتراضية)
+        let MANAGER_PASSWORD = localStorage.getItem('managerPassword') || "1q";
+
+        // تحميل السجلات من localStorage
+        try {
+            const storedRecords = localStorage.getItem('records');
+            records = storedRecords ? JSON.parse(storedRecords) : {};
+        } catch (e) {
+            console.error('خطأ في تحميل السجلات من localStorage:', e);
+            records = {};
+            alert('حدث خطأ أثناء تحميل البيانات. سيتم إعادة تعيين السجلات.');
+        }
+
+        // حدود القيم المقبولة
+        const TEMP_MIN = 0;
+        const TEMP_MAX = 100;
+        const AMP_MIN = 0;
+        const AMP_MAX = 500;
+        const KVARH_MIN = 0;
+        const KWH_MIN = 0;
+        const PF_MIN = 0;
+
+        function showSection(sectionId, prevSection = null) {
+            try {
+                document.querySelectorAll('.section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.classList.add('active');
+                } else {
+                    console.error('القسم ' + sectionId + ' غير موجود');
+                    return;
+                }
+                if (prevSection) {
+                    previousSection = prevSection;
+                    if (sectionId === 'lines') {
+                        document.getElementById('linesBackButton').onclick = () => showSection(prevSection);
+                    } else if (sectionId === 'packing') {
+                        document.getElementById('packingBackButton').onclick = () => showSection(prevSection);
+                    } else if (sectionId === 'other') {
+                        document.getElementById('otherBackButton').onclick = () => showSection(prevSection);
+                    }
+                }
+            } catch (e) {
+                console.error('خطأ في showSection:', e);
+            }
+        }
+
+        function showLoginModal() {
+            try {
+                document.getElementById('loginModal').classList.add('active');
+                document.getElementById('registerModal').classList.remove('active');
+                document.getElementById('deleteTechnicianModal').classList.remove('active');
+                document.getElementById('companionsModal').classList.remove('active');
+                document.getElementById('updatePasswordModal').classList.remove('active');
+                document.getElementById('loginError').textContent = '';
+            } catch (e) {
+                console.error('خطأ في showLoginModal:', e);
+            }
+        }
+
+        function showRegisterModal() {
+            try {
+                document.getElementById('registerModal').classList.add('active');
+                document.getElementById('loginModal').classList.remove('active');
+                document.getElementById('deleteTechnicianModal').classList.remove('active');
+                document.getElementById('registerError').textContent = '';
+            } catch (e) {
+                console.error('خطأ في showRegisterModal:', e);
+            }
+        }
+
+        function showDeleteTechnicianModal() {
+            try {
+                document.getElementById('deleteTechnicianModal').classList.add('active');
+                document.getElementById('loginModal').classList.remove('active');
+                document.getElementById('registerModal').classList.remove('active');
+                document.getElementById('deleteTechnicianError').textContent = '';
+                const technicianSelect = document.getElementById('technicianSelect');
+                technicianSelect.innerHTML = '<option value="">اختر الفني</option>';
+                const users = JSON.parse(localStorage.getItem('users')) || {};
+                Object.keys(users).forEach(username => {
+                    if (username !== currentUser) {
+                        const option = document.createElement('option');
+                        option.value = username;
+                        option.textContent = username;
+                        technicianSelect.appendChild(option);
+                    }
+                });
+                if (technicianSelect.options.length === 1) {
+                    technicianSelect.innerHTML = '<option value="">لا يوجد فنيون لحذفهم</option>';
+                }
+                document.getElementById('deleteTechnicianPassword').value = '';
+            } catch (e) {
+                console.error('خطأ في showDeleteTechnicianModal:', e);
+            }
+        }
+
+        function closeDeleteTechnicianModal() {
+            try {
+                document.getElementById('deleteTechnicianModal').classList.remove('active');
+            } catch (e) {
+                console.error('خطأ في closeDeleteTechnicianModal:', e);
+            }
+        }
+
+        function deleteTechnician() {
+            try {
+                const username = document.getElementById('technicianSelect').value;
+                const password = document.getElementById('deleteTechnicianPassword').value;
+                const errorDiv = document.getElementById('deleteTechnicianError');
+                const users = JSON.parse(localStorage.getItem('users')) || {};
+
+                if (!username) {
+                    errorDiv.textContent = 'يرجى اختيار فني';
+                    return;
+                }
+                if (password !== MANAGER_PASSWORD) {
+                    errorDiv.textContent = 'كلمة مرور المدير غير صحيحة';
+                    return;
+                }
+                if (Object.keys(users).length <= 1) {
+                    errorDiv.textContent = 'لا يمكن حذف الفني الأخير';
+                    return;
+                }
+                if (username === currentUser) {
+                    errorDiv.textContent = 'لا يمكن حذف المستخدم الحالي';
+                    return;
+                }
+
+                delete users[username];
+                localStorage.setItem('users', JSON.stringify(users));
+                closeDeleteTechnicianModal();
+                showLoginModal();
+                alert('تم حذف الفني بنجاح');
+            } catch (e) {
+                console.error('خطأ في deleteTechnician:', e);
+                document.getElementById('deleteTechnicianError').textContent = 'حدث خطأ أثناء حذف الفني';
+            }
+        }
+
+        function showUpdatePasswordModal() {
+            try {
+                document.getElementById('updatePasswordModal').classList.add('active');
+                document.getElementById('updatePasswordError').textContent = '';
+                document.getElementById('currentManagerPassword').value = '';
+                document.getElementById('newManagerPassword').value = '';
+            } catch (e) {
+                console.error('خطأ في showUpdatePasswordModal:', e);
+            }
+        }
+
+        function closeUpdatePasswordModal() {
+            try {
+                document.getElementById('updatePasswordModal').classList.remove('active');
+            } catch (e) {
+                console.error('خطأ في closeUpdatePasswordModal:', e);
+            }
+        }
+
+        function updateManagerPassword() {
+            try {
+                const currentPassword = document.getElementById('currentManagerPassword').value;
+                const newPassword = document.getElementById('newManagerPassword').value.trim();
+                const errorDiv = document.getElementById('updatePasswordError');
+                if (currentPassword !== MANAGER_PASSWORD) {
+                    errorDiv.textContent = 'كلمة المرور الحالية غير صحيحة';
+                    return;
+                }
+                if (!newPassword) {
+                    errorDiv.textContent = 'يرجى إدخال كلمة مرور جديدة';
+                    return;
+                }
+                MANAGER_PASSWORD = newPassword;
+                localStorage.setItem('managerPassword', newPassword);
+                closeUpdatePasswordModal();
+                alert('تم تحديث كلمة مرور المدير بنجاح');
+            } catch (e) {
+                console.error('خطأ في updateManagerPassword:', e);
+                document.getElementById('updatePasswordError').textContent = 'حدث خطأ أثناء تحديث كلمة المرور';
+            }
+        }
+
+        function showCompanionsModal() {
+            try {
+                document.getElementById('companionsModal').classList.add('active');
+                document.getElementById('loginModal').classList.remove('active');
+                document.getElementById('companionsError').textContent = '';
+                const container = document.getElementById('companionsContainer');
+                const users = JSON.parse(localStorage.getItem('users')) || {};
+                container.innerHTML = '';
+                Object.keys(users).forEach(username => {
+                    if (username !== currentUser) {
+                        const div = document.createElement('div');
+                        div.className = 'companion-checkbox';
+                        div.innerHTML = `
+                            <input type="checkbox" id="companion-${username}" value="${username}">
+                            <label for="companion-${username}">${username}</label>
+                            <span class="checkmark"></span>
+                        `;
+                        container.appendChild(div);
+                    }
+                });
+                if (container.innerHTML === '') {
+                    container.innerHTML = '<p>لا يوجد مستخدمون مسجلون آخرون</p>';
+                }
+                document.querySelectorAll('.companion-checkbox input').forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const checkmark = this.parentElement.querySelector('.checkmark');
+                        checkmark.textContent = this.checked ? '✅' : '';
+                    });
+                });
+            } catch (e) {
+                console.error('خطأ في showCompanionsModal:', e);
+            }
+        }
+
+        function saveCompanions() {
+            try {
+                const checkboxes = document.querySelectorAll('.companion-checkbox input:checked');
+                currentCompanions = Array.from(checkboxes).map(checkbox => checkbox.value);
+                document.getElementById('companionsModal').classList.remove('active');
+                showSection('home');
+            } catch (e) {
+                console.error('خطأ في saveCompanions:', e);
+            }
+        }
+
+        function skipCompanions() {
+            try {
+                currentCompanions = [];
+                document.getElementById('companionsModal').classList.remove('active');
+                showSection('home');
+            } catch (e) {
+                console.error('خطأ في skipCompanions:', e);
+            }
+        }
+
+        function register() {
+            try {
+                const username = document.getElementById('regUsername').value.trim();
+                const password = document.getElementById('regPassword').value.trim();
+                const managerPassword = document.getElementById('regManagerPassword').value;
+                const errorDiv = document.getElementById('registerError');
+                if (!username || !password) {
+                    errorDiv.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور';
+                    return;
+                }
+                if (managerPassword !== MANAGER_PASSWORD) {
+                    errorDiv.textContent = 'كلمة مرور المدير غير صحيحة';
+                    return;
+                }
+                let users = JSON.parse(localStorage.getItem('users')) || {};
+                if (users[username]) {
+                    errorDiv.textContent = 'اسم المستخدم موجود بالفعل';
+                    return;
+                }
+                users[username] = password;
+                localStorage.setItem('users', JSON.stringify(users));
+                showLoginModal();
+            } catch (e) {
+                console.error('خطأ في register:', e);
+                document.getElementById('registerError').textContent = 'حدث خطأ أثناء التسجيل';
+            }
+        }
+
+        function login() {
+            try {
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value.trim();
+                const errorDiv = document.getElementById('loginError');
+                const users = JSON.parse(localStorage.getItem('users')) || {};
+                if (users[username] && users[username] === password) {
+                    currentUser = username;
+                    document.getElementById('currentUser').textContent = username;
+                    showCompanionsModal();
+                } else {
+                    errorDiv.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+                }
+            } catch (e) {
+                console.error('خطأ في login:', e);
+                document.getElementById('loginError').textContent = 'حدث خطأ أثناء تسجيل الدخول';
+            }
+        }
+
+        function logout() {
+            try {
+                currentUser = null;
+                currentCompanions = [];
+                showLoginModal();
+            } catch (e) {
+                console.error('خطأ في logout:', e);
+            }
+        }
+
+        function showTable(title, prevSection) {
+            try {
+                if (!currentUser) {
+                    showLoginModal();
+                    return;
+                }
+                currentTable = title;
+                previousSection = prevSection;
+                const tableTitle = document.getElementById('tableTitle');
+                const icon = document.querySelector('.table-title .icon');
+                let titleText = title;
+                if (prevSection.includes('maintenance') || prevSection === 'maintenance') {
+                    icon.textContent = '🔧';
+                    titleText += ' - صيانة';
+                } else if (prevSection.includes('inspection') || prevSection === 'inspection') {
+                    icon.textContent = '🔍';
+                    titleText += ' - فحص';
+                } else {
+                    icon.textContent = '';
+                }
+                tableTitle.textContent = titleText;
+                showSection('tableSection');
+                renderTable(title);
+            } catch (e) {
+                console.error('خطأ في showTable:', e);
+                alert('حدث خطأ أثناء عرض الجدول');
+            }
+        }
+
+        function renderTable(table) {
+            try {
+                const container = document.getElementById('tableContainer');
+                const isAscom = ['ASCOM 1', 'ASCOM 2'].includes(table);
+                const isStationNoAmp = ['MCC', 'CCR', 'cbm1', 'cbm2', 'cbm3', 'cbm5', 'mdb one', 'mdb2', 'mdb3', 'mdb 4', 'mdb 5'].includes(table);
+                const isWorkstation = table === 'Workstation';
+                const isTransformer = table.startsWith('TR');
+
+                let tableHTML = '<table><thead><tr>';
+                if (isAscom) {
+                    tableHTML += `
+                        <th style="width: 15%;">المسجل</th>
+                        <th style="width: 15%;">الملاحظات</th>
+                        <th style="width: 20%;">الوقت</th>
+                        <th style="width: 15%;">النظافة</th>
+                        <th style="width: 15%;">Kvar/h</th>
+                        <th style="width: 15%;">Kw/h</th>
+                        <th style="width: 10%;">P.F</th>
+                    `;
+                } else if (isWorkstation) {
+                    tableHTML += `
+                        <th style="width: 20%;">المسجل</th>
+                        <th style="width: 20%;">الملاحظات</th>
+                        <th style="width: 25%;">الوقت</th>
+                        <th style="width: 25%;">النظافة</th>
+                    `;
+                } else if (isTransformer) {
+                    tableHTML += `
+                        <th style="width: 15%;">الحرارة</th>
+                        <th style="width: 15%;">النظافة</th>
+                        <th style="width: 20%;">الوقت</th>
+                        <th style="width: 15%;">الملاحظات</th>
+                        <th style="width: 15%;">اسم الزيت</th>
+                        <th style="width: 20%;">المسجل</th>
+                    `;
+                } else if (isStationNoAmp) {
+                    tableHTML += `
+                        <th style="width: 12%;">الحرارة</th>
+                        <th style="width: 12%;">النظافة</th>
+                        <th style="width: 15%;">الوقت</th>
+                        <th style="width: 15%;">الملاحظات</th>
+                        <th style="width: 18%;">المسجل</th>
+                        <th style="width: 18%;">الحالة</th>
+                    `;
+                } else {
+                    tableHTML += `
+                        <th style="width: 15%;">الحرارة</th>
+                        <th style="width: 15%;">الأمبير</th>
+                        <th style="width: 15%;">النظافة</th>
+                        <th style="width: 20%;">الوقت</th>
+                        <th style="width: 15%;">الملاحظات</th>
+                        <th style="width: 20%;">المسجل</th>
+                    `;
+                }
+                tableHTML += '</tr></thead><tbody id="tableBody" class="table-body"></tbody></table>';
+                tableHTML += `
+                    <div class="table-buttons">
+                        <button class="button" onclick="addRow()">إضافة سجل</button>
+                `;
+                if (!isWorkstation) {
+                    tableHTML += `<button class="button" onclick="showChartModal()">عرض الرسم البياني</button>`;
+                }
+                tableHTML += `
+                        <button class="button" id="backButton" onclick="showSection('${previousSection}')">رجوع</button>
+                    </div>
+                `;
+                container.innerHTML = tableHTML;
+                loadRecords(table);
+                startBlinking();
+            } catch (e) {
+                console.error('خطأ في renderTable:', e);
+                alert('حدث خطأ أثناء عرض الجدول');
+            }
+        }
+
+        function startBlinking() {
+            try {
+                if (blinkInterval) {
+                    clearInterval(blinkInterval);
+                }
+                blinkInterval = setInterval(() => {
+                    document.querySelectorAll('td.blink').forEach(cell => {
+                        cell.classList.toggle('blink-active');
+                    });
+                }, 2000);
+            } catch (e) {
+                console.error('خطأ في startBlinking:', e);
+            }
+        }
+
+        function loadRecords(table) {
+            try {
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
+                if (records[table] && Array.isArray(records[table])) {
+                    records[table].forEach((record, index) => {
+                        if (!record || typeof record !== 'object') {
+                            console.warn(`سجل غير صالح في الجدول ${table}، الفهرس: ${index}`);
+                            return;
+                        }
+                        const firstNoteWord = (record.note || '').split(' ')[0] || '';
+                        const row = document.createElement('tr');
+                        const isAscom = ['ASCOM 1', 'ASCOM 2'].includes(table);
+                        const isStationNoAmp = ['MCC', 'CCR', 'cbm1', 'cbm2', 'cbm3', 'cbm5', 'mdb one', 'mdb2', 'mdb3', 'mdb 4', 'mdb 5'].includes(table);
+                        const isWorkstation = table === 'Workstation';
+                        const isTransformer = table.startsWith('TR');
+
+                        if (isAscom) {
+                            row.innerHTML = `
+                                <td class="clickable" onclick="showCompanionsViewModal('${encodeURIComponent(JSON.stringify(record.companions || []))}')">${record.recorder || ''}</td>
+                                <td class="clickable" onclick="showNoteModal('${encodeURIComponent(record.note || '')}')">${firstNoteWord}</td>
+                                <td class="clickable" onclick="showDeleteModal(${index}, '${encodeURIComponent(record.time || '')}')">${record.time || ''}</td>
+                                <td>${record.clean || ''}</td>
+                                <td>${record.kvarh || ''}</td>
+                                <td>${record.kwh || ''}</td>
+                                <td>${record.pf || ''}</td>
+                            `;
+                        } else if (isWorkstation) {
+                            row.innerHTML = `
+                                <td class="clickable" onclick="showCompanionsViewModal('${encodeURIComponent(JSON.stringify(record.companions || []))}')">${record.recorder || ''}</td>
+                                <td class="clickable" onclick="showNoteModal('${encodeURIComponent(record.note || '')}')">${firstNoteWord}</td>
+                                <td class="clickable" onclick="showDeleteModal(${index}, '${encodeURIComponent(record.time || '')}')">${record.time || ''}</td>
+                                <td>${record.clean || ''}</td>
+                            `;
+                        } else if (isTransformer) {
+                            row.innerHTML = `
+                                <td>${record.temp || ''}</td>
+                                <td>${record.clean || ''}</td>
+                                <td class="clickable" onclick="showDeleteModal(${index}, '${encodeURIComponent(record.time || '')}')">${record.time || ''}</td>
+                                <td class="clickable" onclick="showNoteModal('${encodeURIComponent(record.note || '')}')">${firstNoteWord}</td>
+                                <td>${record.oil || ''}</td>
+                                <td class="clickable" onclick="showCompanionsViewModal('${encodeURIComponent(JSON.stringify(record.companions || []))}')">${record.recorder || ''}</td>
+                            `;
+                        } else if (isStationNoAmp) {
+                            const statusClass = record.temp > 50 ? (record.status === 'fixed' ? 'fixed' : 'blink') : '';
+                            row.innerHTML = `
+                                <td>${record.temp || ''}</td>
+                                <td>${record.clean || ''}</td>
+                                <td class="clickable" onclick="showDeleteModal(${index}, '${encodeURIComponent(record.time || '')}')">${record.time || ''}</td>
+                                <td class="clickable" onclick="showNoteModal('${encodeURIComponent(record.note || '')}')">${firstNoteWord}</td>
+                                <td class="clickable" onclick="showCompanionsViewModal('${encodeURIComponent(JSON.stringify(record.companions || []))}')">${record.recorder || ''}</td>
+                                <td class="${statusClass} ${record.temp > 50 ? 'clickable' : ''}" onclick="${record.temp > 50 ? `showStatusModal(${index}, '${record.status || 'not_fixed'}')` : ''}">${record.status === 'fixed' ? 'تم الإصلاح' : record.temp > 50 ? 'غير منتهي' : ''}</td>
+                            `;
+                        } else {
+                            row.innerHTML = `
+                                <td>${record.temp || ''}</td>
+                                <td>${record.amp || ''}</td>
+                                <td>${record.clean || ''}</td>
+                                <td class="clickable" onclick="showDeleteModal(${index}, '${encodeURIComponent(record.time || '')}')">${record.time || ''}</td>
+                                <td class="clickable" onclick="showNoteModal('${encodeURIComponent(record.note || '')}')">${firstNoteWord}</td>
+                                <td class="clickable" onclick="showCompanionsViewModal('${encodeURIComponent(JSON.stringify(record.companions || []))}')">${record.recorder || ''}</td>
+                            `;
+                        }
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    console.log(`لا توجد سجلات للجدول: ${table}`);
+                }
+            } catch (e) {
+                console.error('خطأ في loadRecords:', e);
+                alert('حدث خطأ أثناء تحميل السجلات');
+            }
+        }
+
+        function addRow() {
+            try {
+                if (!currentUser) {
+                    showLoginModal();
+                    return;
+                }
+                currentRowIndex = null;
+                document.getElementById('inputModal').classList.add('active');
+                document.getElementById('inputError').textContent = '';
+                renderInputModal();
+            } catch (e) {
+                console.error('خطأ في addRow:', e);
+            }
+        }
+
+        function renderInputModal() {
+            try {
+                const fieldsContainer = document.getElementById('inputFields');
+                const isAscom = ['ASCOM 1', 'ASCOM 2'].includes(currentTable);
+                const isStationNoAmp = ['MCC', 'CCR', 'cbm1', 'cbm2', 'cbm3', 'cbm5', 'mdb one', 'mdb2', 'mdb3', 'mdb 4', 'mdb 5'].includes(currentTable);
+                const isWorkstation = currentTable === 'Workstation';
+                const isTransformer = currentTable.startsWith('TR');
+
+                let fieldsHTML = '';
+                if (isAscom) {
+                    fieldsHTML = `
+                        <select id="cleanInput">
+                            <option value="نظيف">نظيف</option>
+                            <option value="غير نظيف">غير نظيف</option>
+                        </select>
+                        <input type="number" id="kvarhInput" placeholder="Kvar/h">
+                        <input type="number" id="kwhInput" placeholder="Kw/h">
+                        <input type="number" id="pfInput" placeholder="P.F" step="0.01">
+                        <input type="text" id="noteInput" placeholder="الملاحظات">
+                    `;
+                } else if (isWorkstation) {
+                    fieldsHTML = `
+                        <select id="cleanInput">
+                            <option value="نظيف">نظيف</option>
+                            <option value="غير نظيف">غير نظيف</option>
+                        </select>
+                        <input type="text" id="noteInput" placeholder="الملاحظات">
+                    `;
+                } else if (isTransformer) {
+                    fieldsHTML = `
+                        <input type="number" id="tempInput" placeholder="الحرارة (درجة مئوية)">
+                        <select id="cleanInput">
+                            <option value="نظيف">نظيف</option>
+                            <option value="غير نظيف">غير نظيف</option>
+                        </select>
+                        <input type="text" id="oilInput" placeholder="نسبة الزيت">
+                        <input type="text" id="noteInput" placeholder="الملاحظات">
+                    `;
+                } else if (isStationNoAmp) {
+                    fieldsHTML = `
+                        <input type="number" id="tempInput" placeholder="الحرارة (درجة مئوية)">
+                        <select id="cleanInput">
+                            <option value="نظيف">نظيف</option>
+                            <option value="غير نظيف">غير نظيف</option>
+                        </select>
+                        <input type="text" id="noteInput" placeholder="الملاحظات">
+                    `;
+                } else {
+                    fieldsHTML = `
+                        <input type="number" id="tempInput" placeholder="الحرارة (درجة مئوية)">
+                        <input type="number" id="ampInput" placeholder="الأمبير">
+                        <select id="cleanInput">
+                            <option value="نظيف">نظيف</option>
+                            <option value="غير نظيف">غير نظيف</option>
+                        </select>
+                        <input type="text" id="noteInput" placeholder="الملاحظات">
+                    `;
+                }
+                fieldsContainer.innerHTML = fieldsHTML;
+            } catch (e) {
+                console.error('خطأ في renderInputModal:', e);
+            }
+        }
+
+        function saveRow() {
+            try {
+                const isAscom = ['ASCOM 1', 'ASCOM 2'].includes(currentTable);
+                const isStationNoAmp = ['MCC', 'CCR', 'cbm1', 'cbm2', 'cbm3', 'cbm5', 'mdb one', 'mdb2', 'mdb3', 'mdb 4', 'mdb 5'].includes(currentTable);
+                const isWorkstation = currentTable === 'Workstation';
+                const isTransformer = currentTable.startsWith('TR');
+
+                const clean = document.getElementById('cleanInput')?.value;
+                const note = document.getElementById('noteInput')?.value.trim() || '';
+                const time = new Date().toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    second: 'numeric',
+                    hour12: true
+                });
+                const errorDiv = document.getElementById('inputError');
+                let record = { time, note, recorder: currentUser, companions: currentCompanions };
+
+                let error = '';
+                if (isAscom) {
+                    const kvarh = parseFloat(document.getElementById('kvarhInput')?.value);
+                    const kwh = parseFloat(document.getElementById('kwhInput')?.value);
+                    const pf = parseFloat(document.getElementById('pfInput')?.value);
+                    if (isNaN(kvarh) || kvarh < KVARH_MIN) {
+                        error += 'Kvar/h يجب أن يكون رقمًا غير سالب\n';
+                    }
+                    if (isNaN(kwh) || kwh < KWH_MIN) {
+                        error += 'Kw/h يجب أن يكون رقمًا غير سالب\n';
+                    }
+                    if (isNaN(pf) || pf < PF_MIN) {
+                        error += 'P.F يجب أن يكون رقمًا غير سالب\n';
+                    }
+                    record.clean = clean;
+                    record.kvarh = kvarh;
+                    record.kwh = kwh;
+                    record.pf = pf;
+                } else if (isWorkstation) {
+                    record.clean = clean;
+                } else if (isTransformer) {
+                    const temp = parseFloat(document.getElementById('tempInput')?.value);
+                    const oil = document.getElementById('oilInput')?.value.trim() || '';
+                    if (isNaN(temp) || temp < TEMP_MIN || temp > TEMP_MAX) {
+                        error += 'الحرارة يجب أن تكون بين ' + TEMP_MIN + ' و' + TEMP_MAX + ' درجة مئوية\n';
+                    }
+                    record.temp = temp;
+                    record.clean = clean;
+                    record.oil = oil;
+                } else if (isStationNoAmp) {
+                    const temp = parseFloat(document.getElementById('tempInput')?.value);
+                    if (isNaN(temp) || temp < TEMP_MIN || temp > TEMP_MAX) {
+                        error += 'الحرارة يجب أن تكون بين ' + TEMP_MIN + ' و' + TEMP_MAX + ' درجة مئوية\n';
+                    }
+                    record.temp = temp;
+                    record.clean = clean;
+                    record.status = temp > 50 ? 'not_fixed' : '';
+                } else {
+                    const temp = parseFloat(document.getElementById('tempInput')?.value);
+                    const amp = parseFloat(document.getElementById('ampInput')?.value);
+                    if (isNaN(temp) || temp < TEMP_MIN || temp > TEMP_MAX) {
+                        error += 'الحرارة يجب أن تكون بين ' + TEMP_MIN + ' و' + TEMP_MAX + ' درجة مئوية\n';
+                    }
+                    if (isNaN(amp) || amp < AMP_MIN || amp > AMP_MAX) {
+                        error += 'الأمبير يجب أن يكون بين ' + AMP_MIN + ' و' + AMP_MAX + ' أمبير\n';
+                    }
+                    record.temp = temp;
+                    record.amp = amp;
+                    record.clean = clean;
+                }
+
+                if (error) {
+                    errorDiv.textContent = error;
+                    return;
+                }
+
+                if (!records[currentTable]) {
+                    records[currentTable] = [];
+                }
+                records[currentTable].push(record);
+                localStorage.setItem('records', JSON.stringify(records));
+                renderTable(currentTable);
+                closeInputModal();
+                // Scroll to top
+                document.getElementById('tableBody').scrollTop = 0;
+            } catch (e) {
+                console.error('خطأ في saveRow:', e);
+                document.getElementById('inputError').textContent = 'حدث خطأ أثناء حفظ السجل';
+            }
+        }
+
+        function closeInputModal() {
+            try {
+                document.getElementById('inputModal').classList.remove('active');
+            } catch (e) {
+                console.error('خطأ في closeInputModal:', e);
+            }
+        }
+
+        function showChartModal() {
+            try {
+                document.getElementById('chartModal').classList.add('active');
+                updateChart();
+            } catch (e) {
+                console.error('خطأ في showChartModal:', e);
+            }
+        }
+
+        function closeChartModal() {
+            try {
+                document.getElementById('chartModal').classList.remove('active');
+                if (currentChart) {
+                    currentChart.destroy();
+                    currentChart = null;
+                }
+            } catch (e) {
+                console.error('خطأ في closeChartModal:', e);
+            }
+        }
+
+        function showNoteModal(encodedNote) {
+            try {
+                const note = decodeURIComponent(encodedNote);
+                document.getElementById('fullNote').textContent = note || 'لا توجد ملاحظات';
+                document.getElementById('noteModal').classList.add('active');
+            } catch (e) {
+                console.error('خطأ في showNoteModal:', e);
+            }
+        }
+
+        function closeNoteModal() {
+            try {
+                document.getElementById('noteModal').classList.remove('active');
+            } catch (e) {
+                console.error('خطأ في closeNoteModal:', e);
+            }
+        }
+
+        function showCompanionsViewModal(encodedCompanions) {
+            try {
+                const companions = JSON.parse(decodeURIComponent(encodedCompanions));
+                const companionsList = companions && companions.length > 0 
+                    ? companions.join(', ')
+                    : 'لا يوجد مرافقون';
+                document.getElementById('companionsList').textContent = companionsList;
+                document.getElementById('companionsViewModal').classList.add('active');
+            } catch (e) {
+                console.error('خطأ في showCompanionsViewModal:', e);
+            }
+        }
+
+        function closeCompanionsViewModal() {
+            try {
+                document.getElementById('companionsViewModal').classList.remove('active');
+            } catch (e) {
+                console.error('خطأ في closeCompanionsViewModal:', e);
+            }
+        }
+
+        function showDeleteModal(index, encodedTime) {
+            try {
+                rowToDelete = index;
+                const time = decodeURIComponent(encodedTime);
+                document.getElementById('deleteTimestamp').textContent = 'الوقت: ' + (time || 'غير متوفر');
+                document.getElementById('managerPassword').value = '';
+                document.getElementById('deleteError').textContent = '';
+                document.getElementById('deleteModal').classList.add('active');
+            } catch (e) {
+                console.error('خطأ في showDeleteModal:', e);
+            }
+        }
+
+        function closeDeleteModal() {
+            try {
+                document.getElementById('deleteModal').classList.remove('active');
+                rowToDelete = null;
+            } catch (e) {
+                console.error('خطأ في closeDeleteModal:', e);
+            }
+        }
+
+        function confirmDelete() {
+            try {
+                const password = document.getElementById('managerPassword').value;
+                const errorDiv = document.getElementById('deleteError');
+                if (password !== MANAGER_PASSWORD) {
+                    errorDiv.textContent = 'كلمة المرور غير صحيحة';
+                    return;
+                }
+                if (rowToDelete !== null && records[currentTable]) {
+                    records[currentTable].splice(rowToDelete, 1);
+                    localStorage.setItem('records', JSON.stringify(records));
+                    renderTable(currentTable);
+                    closeDeleteModal();
+                }
+            } catch (e) {
+                console.error('خطأ في confirmDelete:', e);
+                document.getElementById('deleteError').textContent = 'حدث خطأ أثناء الحذف';
+            }
+        }
+
+        function showStatusModal(index, currentStatus) {
+            try {
+                statusRowIndex = index;
+                document.getElementById('statusInput').value = currentStatus;
+                document.getElementById('fixerPassword').value = '';
+                document.getElementById('statusError').textContent = '';
+                document.getElementById('statusModal').classList.add('active');
+            } catch (e) {
+                console.error('خطأ في showStatusModal:', e);
+            }
+        }
+
+        function closeStatusModal() {
+            try {
+                document.getElementById('statusModal').classList.remove('active');
+                statusRowIndex = null;
+            } catch (e) {
+                console.error('خطأ في closeStatusModal:', e);
+            }
+        }
+
+        function saveStatus() {
+            try {
+                const status = document.getElementById('statusInput').value;
+                const password = document.getElementById('fixerPassword').value;
+                const errorDiv = document.getElementById('statusError');
+                if (status === 'fixed' && password !== MANAGER_PASSWORD) {
+                    errorDiv.textContent = 'كلمة مرور المصلح غير صحيحة';
+                    return;
+                }
+                if (statusRowIndex !== null && records[currentTable]) {
+                    records[currentTable][statusRowIndex].status = status;
+                    if (status === 'fixed') {
+                        records[currentTable][statusRowIndex].fixer = currentUser;
+                    } else {
+                        delete records[currentTable][statusRowIndex].fixer;
+                    }
+                    localStorage.setItem('records', JSON.stringify(records));
+                    renderTable(currentTable);
+                    closeStatusModal();
+                }
+            } catch (e) {
+                console.error('خطأ في saveStatus:', e);
+                document.getElementById('statusError').textContent = 'حدث خطأ أثناء تحديث الحالة';
+            }
+        }
+
+        function updateChart() {
+            try {
+                const chartType = document.getElementById('chartType').value;
+                const ctx = document.getElementById('chartCanvas').getContext('2d');
+                const data = records[currentTable] || [];
+                const labels = data.map((_, i) => 'قياس ' + (i + 1));
+                const values = data.map(record => {
+                    if (!record) return null;
+                    switch (chartType) {
+                        case 'temp':
+                            return record.temp !== undefined ? record.temp : null;
+                        case 'amp':
+                            return record.amp !== undefined ? record.amp : null;
+                        case 'kvarh':
+                            return record.kvarh !== undefined ? record.kvarh : null;
+                        case 'kwh':
+                            return record.kwh !== undefined ? record.kwh : null;
+                        case 'pf':
+                            return record.pf !== undefined ? record.pf : null;
+                        default:
+                            return null;
+                    }
+                }).filter(val => val !== null);
+
+                if (currentChart) {
+                    currentChart.destroy();
+                }
+
+                if (values.length === 0) {
+                    ctx.canvas.parentNode.innerHTML = '<p>لا توجد بيانات لعرض الرسم البياني</p>';
+                    return;
+                }
+
+                currentChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels.slice(0, values.length),
+                        datasets: [{
+                            label: chartType === 'temp' ? 'الحرارة (°C)' :
+                                    chartType === 'amp' ? 'الأمبير' :
+                                    chartType === 'kvarh' ? 'Kvar/h' :
+                                    chartType === 'kwh' ? 'Kw/h' :
+                                    'P.F',
+                            data: values,
+                            borderColor: '#007bff',
+                            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: chartType === 'temp' ? 'الحرارة (°C)' :
+                                          chartType === 'amp' ? 'الأمبير' :
+                                          chartType === 'kvarh' ? 'Kvar/h' :
+                                          chartType === 'kwh' ? 'Kw/h' :
+                                          'P.F'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'القياسات'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error('خطأ في updateChart:', e);
+                document.getElementById('chartCanvas').parentNode.innerHTML = '<p>حدث خطأ أثناء عرض الرسم البياني</p>';
+            }
+        }
+
+        function printTable() {
+            try {
+                const table = document.getElementById('tableContainer').querySelector('table');
+                if (!table) {
+                    alert('لا يوجد جدول للطباعة');
+                    return;
+                }
+
+                // Create a new window for printing
+                const printWindow = window.open('', '_blank');
+                const title = document.getElementById('tableTitle').textContent;
+
+                // Get styles relevant for printing
+                const styles = `
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 20px;
+                            direction: rtl;
+                        }
+                        h2 {
+                            text-align: center;
+                            font-size: 16pt;
+                            margin-bottom: 20px;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            table-layout: fixed;
+                            page-break-inside: auto;
+                        }
+                        th, td {
+                            border: 1px solid #ddd;
+                            padding: 8px;
+                            text-align: center;
+                            font-size: 12pt;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
+                        th {
+                            background-color: #007bff;
+                            color: white;
+                        }
+                        tr {
+                            page-break-inside: avoid;
+                            page-break-after: auto;
+                        }
+                        @media print {
+                            body {
+                                margin: 0;
+                                padding: 0;
+                            }
+                            table {
+                                width: 100%;
+                            }
+                            .no-print {
+                                display: none;
+                            }
+                        }
+                    </style>
+                `;
+
+                // Write content to the new window
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html lang="ar" dir="rtl">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>طباعة ${title}</title>
+                        ${styles}
+                    </head>
+                    <body>
+                        <h2>${title}</h2>
+                        ${table.outerHTML}
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+
+                // Wait for content to load and trigger print
+                printWindow.onload = () => {
+                    setTimeout(() => {
+                        try {
+                            printWindow.print();
+                            printWindow.close();
+                        } catch (e) {
+                            console.error('خطأ في الطباعة:', e);
+                            alert('فشل في فتح نافذة الطباعة. تأكد من أن جهازك متصل بطابعة أو جرب متصفحًا آخر.');
+                        }
+                    }, 500);
+                };
+            } catch (e) {
+                console.error('خطأ في printTable:', e);
+                alert('حدث خطأ أثناء محاولة الطباعة. تأكد من أن جهازك متصل بطابعة.');
+            }
+        }
+    </script>
+</body>
+</html>
